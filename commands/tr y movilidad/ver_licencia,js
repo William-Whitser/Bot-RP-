@@ -1,0 +1,33 @@
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const Licencia = require("../../schemas/licenciaSchema");
+
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName("ver-licencia")
+    .setDescription("Ver los datos de la licencia de un usuario")
+    .addUserOption(option =>
+      option.setName("usuario")
+        .setDescription("Usuario a consultar")
+        .setRequired(true)
+    ),
+
+  async execute(interaction) {
+    const usuario = interaction.options.getUser("usuario");
+    const licencia = await Licencia.findOne({ userId: usuario.id });
+
+    if (!licencia) return interaction.reply("❌ Este usuario no tiene licencia.");
+
+    const embed = new EmbedBuilder()
+      .setTitle("🪪 Licencia de Conducción")
+      .addFields(
+        { name: "Categoría", value: licencia.categoria, inline: true },
+        { name: "Puntos", value: `${licencia.puntos}`, inline: true },
+        { name: "Expedición", value: licencia.fechaExpedicion.toLocaleDateString(), inline: true },
+        { name: "Expiración", value: licencia.fechaExpiracion.toLocaleDateString(), inline: true }
+      )
+      .setThumbnail(usuario.displayAvatarURL())
+      .setColor("Blue");
+
+    await interaction.reply({ embeds: [embed] });
+  },
+};
